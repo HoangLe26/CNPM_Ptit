@@ -14,7 +14,7 @@ import java.awt.event.*;
 import java.util.List;
 
 /**
- * MatchDetailFrm – Chi tiết các ván đấu của một kỳ thủ (bước 39-47).
+ * MatchDetailFrm – Chi tiết các ván đấu. Dùng ảnh nền và logo thực.
  */
 public class MatchDetailFrm extends JFrame implements ActionListener {
 
@@ -22,10 +22,9 @@ public class MatchDetailFrm extends JFrame implements ActionListener {
     private final Round           currentRound;
     private final StatisticRecord statRecord;
 
-    private static final Color COLOR_PANEL     = new Color(255, 255, 255, 220);
+    private static final Color COLOR_PANEL     = new Color(255, 255, 255, 215);
     private static final Color COLOR_HEADER_BG = new Color(52,  110, 120);
     private static final Color COLOR_HEADER_FG = Color.WHITE;
-    private static final Color COLOR_ROW_SEL   = new Color(200, 230, 240);
 
     public MatchDetailFrm(User user, Round round, StatisticRecord sr) {
         this.currentUser  = user;
@@ -38,7 +37,7 @@ public class MatchDetailFrm extends JFrame implements ActionListener {
         setLocationRelativeTo(null);
         setResizable(false);
 
-        LoginFrm.BackgroundPanel bg = new LoginFrm.BackgroundPanel();
+        LoginFrm.BackgroundPanel bg = new LoginFrm.BackgroundPanel(LoginFrm.bgImage);
         bg.setLayout(new BorderLayout());
         setContentPane(bg);
 
@@ -55,66 +54,61 @@ public class MatchDetailFrm extends JFrame implements ActionListener {
     private JPanel buildTopBar() {
         JPanel bar = new JPanel(new BorderLayout());
         bar.setOpaque(false);
-        bar.setBorder(new EmptyBorder(10, 15, 5, 15));
+        bar.setBorder(new EmptyBorder(8, 10, 4, 14));
 
-        JLabel lblLogo = new JLabel("♔ CHESS");
-        lblLogo.setFont(new Font("Serif", Font.BOLD, 16));
-        lblLogo.setForeground(Color.DARK_GRAY);
-        bar.add(lblLogo, BorderLayout.WEST);
+        bar.add(LoginFrm.buildLogoPanel(48, 48), BorderLayout.WEST);
 
-        JPanel centerPanel = new JPanel();
-        centerPanel.setOpaque(false);
-        centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
-        JLabel lbl1 = new JLabel("♔ CHESS", SwingConstants.CENTER);
-        lbl1.setFont(new Font("Serif", Font.BOLD, 20));
-        lbl1.setAlignmentX(Component.CENTER_ALIGNMENT);
-        JLabel lbl2 = new JLabel(
+        JPanel center = new JPanel();
+        center.setOpaque(false);
+        center.setLayout(new BoxLayout(center, BoxLayout.Y_AXIS));
+        if (LoginFrm.logoImage != null) {
+            Image scaled = LoginFrm.logoImage.getScaledInstance(55, 55, Image.SCALE_SMOOTH);
+            JLabel imgLbl = new JLabel(new ImageIcon(scaled));
+            imgLbl.setAlignmentX(Component.CENTER_ALIGNMENT);
+            center.add(imgLbl);
+        }
+        JLabel bc = new JLabel(
             "Home/ Elo change statistics/ Select Round/ Elo change list/ Details of the matches",
             SwingConstants.CENTER);
-        lbl2.setFont(new Font("SansSerif", Font.BOLD, 10));
-        lbl2.setAlignmentX(Component.CENTER_ALIGNMENT);
-        centerPanel.add(lbl1);
-        centerPanel.add(lbl2);
-        bar.add(centerPanel, BorderLayout.CENTER);
+        bc.setFont(new Font("SansSerif", Font.BOLD, 10));
+        bc.setAlignmentX(Component.CENTER_ALIGNMENT);
+        center.add(bc);
+        bar.add(center, BorderLayout.CENTER);
 
         return bar;
     }
 
     private JPanel buildCard() {
-        JPanel card = new JPanel(new BorderLayout(0, 12));
+        JPanel card = new JPanel(new BorderLayout(0, 10));
         card.setBackground(COLOR_PANEL);
         card.setBorder(new CompoundBorder(
             new LineBorder(new Color(200, 210, 220), 1, true),
-            new EmptyBorder(20, 30, 20, 30)
+            new EmptyBorder(18, 28, 18, 28)
         ));
-        card.setPreferredSize(new Dimension(760, 380));
+        card.setPreferredSize(new Dimension(760, 390));
 
         // Title row
         JPanel titleRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         titleRow.setOpaque(false);
-
         JButton btnBack = SelectRoundFrm.buildBackButton();
         btnBack.addActionListener(this);
         titleRow.add(btnBack);
 
-        JPanel titleTextPanel = new JPanel();
-        titleTextPanel.setOpaque(false);
-        titleTextPanel.setLayout(new BoxLayout(titleTextPanel, BoxLayout.Y_AXIS));
-
+        JPanel titleText = new JPanel();
+        titleText.setOpaque(false);
+        titleText.setLayout(new BoxLayout(titleText, BoxLayout.Y_AXIS));
         JLabel lblTitle = new JLabel("Match details of player:");
-        lblTitle.setFont(new Font("SansSerif", Font.BOLD, 22));
+        lblTitle.setFont(new Font("SansSerif", Font.BOLD, 20));
         JLabel lblName  = new JLabel(statRecord.getName(), SwingConstants.CENTER);
         lblName.setFont(new Font("SansSerif", Font.BOLD, 26));
         lblName.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        titleTextPanel.add(lblTitle);
-        titleTextPanel.add(lblName);
-        titleRow.add(titleTextPanel);
+        titleText.add(lblTitle);
+        titleText.add(lblName);
+        titleRow.add(titleText);
 
         card.add(titleRow, BorderLayout.NORTH);
 
         // Table
-        // Bước 41-46: gọi MatchDetailDAO
         MatchDetailDAO dao = new MatchDetailDAO();
         List<MatchDetail> details = dao.getMatchDetail(statRecord.getPlayerId(), currentRound.getId());
 
@@ -124,12 +118,11 @@ public class MatchDetailFrm extends JFrame implements ActionListener {
             MatchDetail md = details.get(i);
             data[i][0] = md.getMatchId();
             data[i][1] = md.getOpponentName();
-            // Kết quả: 1.0 = Thắng, 0.5 = Hòa, 0.0 = Thua
-            String resultStr;
-            if (md.getResult() == 1.0f)      resultStr = "1 (Win)";
-            else if (md.getResult() == 0.5f) resultStr = "½ (Draw)";
-            else                              resultStr = "0 (Loss)";
-            data[i][2] = resultStr;
+            String res;
+            if (md.getResult() == 1.0f)      res = "1 (Win)";
+            else if (md.getResult() == 0.5f) res = "½ (Draw)";
+            else                              res = "0 (Loss)";
+            data[i][2] = res;
             data[i][3] = (md.getEloChange() >= 0 ? "+" : "") + md.getEloChange();
         }
 
@@ -140,24 +133,46 @@ public class MatchDetailFrm extends JFrame implements ActionListener {
         table.setFont(new Font("SansSerif", Font.PLAIN, 13));
         table.setRowHeight(36);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.setSelectionBackground(COLOR_ROW_SEL);
+        // Tắt highlight khi chọn hàng
+        table.setSelectionBackground(Color.WHITE);
+        table.setSelectionForeground(Color.BLACK);
+        table.setFocusable(false);
         table.setGridColor(new Color(180, 180, 180));
         table.setShowGrid(true);
 
-        JTableHeader header = table.getTableHeader();
-        header.setFont(new Font("SansSerif", Font.BOLD, 13));
-        header.setBackground(COLOR_HEADER_BG);
-        header.setForeground(COLOR_HEADER_FG);
-        header.setReorderingAllowed(false);
-        ((DefaultTableCellRenderer) header.getDefaultRenderer())
-            .setHorizontalAlignment(SwingConstants.CENTER);
+        // Header: custom renderer ép cứng màu teal
+        table.getTableHeader().setDefaultRenderer(new DefaultTableCellRenderer() {
+            {
+                setHorizontalAlignment(SwingConstants.CENTER);
+                setBackground(COLOR_HEADER_BG);
+                setForeground(COLOR_HEADER_FG);
+                setFont(new Font("SansSerif", Font.BOLD, 13));
+                setOpaque(true);
+            }
+            @Override
+            public Component getTableCellRendererComponent(
+                    JTable t, Object value, boolean sel, boolean foc, int row, int col) {
+                setText(value == null ? "" : value.toString());
+                return this;
+            }
+        });
+        table.getTableHeader().setReorderingAllowed(false);
 
-        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-        centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+        // Cell renderer: căn giữa, màu cố định
+        DefaultTableCellRenderer cellRenderer = new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(
+                    JTable t, Object value, boolean isSelected, boolean hasFocus, int row, int col) {
+                super.getTableCellRendererComponent(t, value, false, false, row, col);
+                setHorizontalAlignment(SwingConstants.CENTER);
+                setBackground(row % 2 == 0 ? Color.WHITE : new Color(245, 248, 250));
+                setForeground(Color.BLACK);
+                return this;
+            }
+        };
         for (int c = 0; c < cols.length; c++) {
-            table.getColumnModel().getColumn(c).setCellRenderer(centerRenderer);
+            table.getColumnModel().getColumn(c).setCellRenderer(cellRenderer);
         }
-        // Wider opponent column
         table.getColumnModel().getColumn(1).setPreferredWidth(220);
 
         JScrollPane scroll = new JScrollPane(table);
@@ -169,7 +184,6 @@ public class MatchDetailFrm extends JFrame implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        // Back → EloStatisticFrm
         dispose();
         new EloStatisticFrm(currentUser, currentRound);
     }

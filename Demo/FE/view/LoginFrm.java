@@ -8,23 +8,37 @@ import javax.swing.border.*;
 import java.awt.*;
 import java.awt.event.*;
 
+import java.io.File;
+
 /**
- * LoginFrm – Màn hình đăng nhập (bước 1-11 trong kịch bản).
+ * LoginFrm – Màn hình đăng nhập sử dụng ảnh thực từ folder UI.
  * Tài khoản demo: admin/123  hoặc  staff/123
  */
 public class LoginFrm extends JFrame implements ActionListener {
 
-    private JTextField txtUsername;
+    private JTextField     txtUsername;
     private JPasswordField txtPassword;
-    private JButton btnLogin;
-    private JLabel lblError;
+    private JButton        btnLogin;
+    private JLabel         lblError;
 
-    // Màu sắc chủ đạo theo UI mẫu (teal/navy)
-    private static final Color COLOR_PANEL    = new Color(255, 255, 255, 230);
+    // ── Đường dẫn ảnh tương đối so với thư mục chạy ──────────────────────
+    private static final String PATH_BG   = "../../UI/Screenshot 2026-04-30 085925 (1).png";
+    private static final String PATH_LOGO = "../../UI/logo-removebg-preview.png";
+
+    // ── Màu sắc theo UI mẫu ───────────────────────────────────────────────
+    private static final Color COLOR_PANEL    = new Color(255, 255, 255, 220);
     private static final Color COLOR_FIELD_BG = new Color(220, 232, 240);
     private static final Color COLOR_BTN      = new Color(92, 148, 165);
     private static final Color COLOR_BTN_HOV  = new Color(60, 110, 130);
-    private static final Color COLOR_TITLE    = new Color(30,  30,  30);
+
+    // ── Hình nền (load 1 lần, dùng chung) ────────────────────────────────
+    static Image bgImage   = null;
+    static Image logoImage = null;
+
+    static {
+        bgImage   = loadImage(PATH_BG);
+        logoImage = loadImage(PATH_LOGO);
+    }
 
     public LoginFrm() {
         setTitle("Chess Championship – Login");
@@ -33,17 +47,16 @@ public class LoginFrm extends JFrame implements ActionListener {
         setLocationRelativeTo(null);
         setResizable(false);
 
-        // ── Background panel ──────────────────────────────────────────────
-        BackgroundPanel bg = new BackgroundPanel();
+        BackgroundPanel bg = new BackgroundPanel(bgImage);
         bg.setLayout(new GridBagLayout());
         setContentPane(bg);
 
-        // ── Header: logo + "CHESS" label (top-left) ───────────────────────
-        JPanel headerPanel = buildLogoLabel();
+        // ── Header top-left ───────────────────────────────────────────────
+        JPanel headerPanel = buildLogoPanel(50, 50);
         GridBagConstraints gbcH = new GridBagConstraints();
         gbcH.gridx = 0; gbcH.gridy = 0;
         gbcH.anchor = GridBagConstraints.NORTHWEST;
-        gbcH.insets = new Insets(10, 15, 0, 0);
+        gbcH.insets = new Insets(8, 10, 0, 0);
         gbcH.weightx = 1; gbcH.weighty = 0;
         gbcH.fill = GridBagConstraints.HORIZONTAL;
         bg.add(headerPanel, gbcH);
@@ -53,7 +66,7 @@ public class LoginFrm extends JFrame implements ActionListener {
         GridBagConstraints gbcC = new GridBagConstraints();
         gbcC.gridx = 0; gbcC.gridy = 1;
         gbcC.anchor = GridBagConstraints.CENTER;
-        gbcC.insets = new Insets(0, 0, 30, 0);
+        gbcC.insets = new Insets(0, 0, 40, 0);
         gbcC.weightx = 1; gbcC.weighty = 1;
         bg.add(card, gbcC);
 
@@ -61,13 +74,19 @@ public class LoginFrm extends JFrame implements ActionListener {
     }
 
     // ──────────────────────────────────────────────────────────────────────
-    private JPanel buildLogoLabel() {
-        JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 5));
+    /** Panel logo nhỏ ở góc trên trái */
+    static JPanel buildLogoPanel(int w, int h) {
+        JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
         p.setOpaque(false);
-        JLabel lbl = new JLabel("♔ CHESS");
-        lbl.setFont(new Font("Serif", Font.BOLD, 16));
-        lbl.setForeground(Color.DARK_GRAY);
-        p.add(lbl);
+        if (logoImage != null) {
+            Image scaled = logoImage.getScaledInstance(w, h, Image.SCALE_SMOOTH);
+            p.add(new JLabel(new ImageIcon(scaled)));
+        } else {
+            JLabel lbl = new JLabel("♔ CHESS");
+            lbl.setFont(new Font("Serif", Font.BOLD, 16));
+            lbl.setForeground(Color.DARK_GRAY);
+            p.add(lbl);
+        }
         return p;
     }
 
@@ -77,21 +96,24 @@ public class LoginFrm extends JFrame implements ActionListener {
         card.setBackground(COLOR_PANEL);
         card.setBorder(new CompoundBorder(
             new LineBorder(new Color(200, 210, 220), 1, true),
-            new EmptyBorder(30, 50, 40, 50)
+            new EmptyBorder(25, 50, 35, 50)
         ));
-        card.setPreferredSize(new Dimension(460, 340));
+        card.setPreferredSize(new Dimension(460, 360));
 
-        // ── Title ──
+        // ── Logo lớn ở giữa card ──
+        JPanel logoCenter = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        logoCenter.setOpaque(false);
+        if (logoImage != null) {
+            Image scaled = logoImage.getScaledInstance(80, 80, Image.SCALE_SMOOTH);
+            logoCenter.add(new JLabel(new ImageIcon(scaled)));
+        }
+        logoCenter.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // ── Tiêu đề ──
         JLabel lblTitle = new JLabel("LOGIN", SwingConstants.CENTER);
         lblTitle.setFont(new Font("SansSerif", Font.BOLD, 32));
-        lblTitle.setForeground(COLOR_TITLE);
+        lblTitle.setForeground(new Color(30, 30, 30));
         lblTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        // ── Big logo in card ──
-        JLabel lblBigLogo = new JLabel("♔ CHESS", SwingConstants.CENTER);
-        lblBigLogo.setFont(new Font("Serif", Font.BOLD, 22));
-        lblBigLogo.setForeground(COLOR_TITLE);
-        lblBigLogo.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         // ── Username ──
         JLabel lblU = new JLabel("Username");
@@ -101,11 +123,9 @@ public class LoginFrm extends JFrame implements ActionListener {
         txtUsername = new JTextField();
         txtUsername.setFont(new Font("SansSerif", Font.PLAIN, 14));
         txtUsername.setBackground(COLOR_FIELD_BG);
-        txtUsername.setBorder(new EmptyBorder(6, 10, 6, 10));
+        txtUsername.setBorder(new EmptyBorder(7, 12, 7, 12));
         txtUsername.setMaximumSize(new Dimension(Integer.MAX_VALUE, 38));
         txtUsername.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        // Placeholder
         setPlaceholder(txtUsername, "Enter account name");
 
         // ── Password ──
@@ -116,12 +136,12 @@ public class LoginFrm extends JFrame implements ActionListener {
         txtPassword = new JPasswordField();
         txtPassword.setFont(new Font("SansSerif", Font.PLAIN, 14));
         txtPassword.setBackground(COLOR_FIELD_BG);
-        txtPassword.setBorder(new EmptyBorder(6, 10, 6, 10));
+        txtPassword.setBorder(new EmptyBorder(7, 12, 7, 12));
         txtPassword.setMaximumSize(new Dimension(Integer.MAX_VALUE, 38));
         txtPassword.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // ── Error label ──
-        lblError = new JLabel(" ");
+        // ── Error ──
+        lblError = new JLabel(" ", SwingConstants.CENTER);
         lblError.setFont(new Font("SansSerif", Font.PLAIN, 12));
         lblError.setForeground(Color.RED);
         lblError.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -132,7 +152,7 @@ public class LoginFrm extends JFrame implements ActionListener {
         btnLogin.setBackground(COLOR_BTN);
         btnLogin.setForeground(Color.WHITE);
         btnLogin.setFocusPainted(false);
-        btnLogin.setBorder(new EmptyBorder(8, 40, 8, 40));
+        btnLogin.setBorder(new EmptyBorder(9, 50, 9, 50));
         btnLogin.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         btnLogin.setAlignmentX(Component.CENTER_ALIGNMENT);
         btnLogin.addActionListener(this);
@@ -140,15 +160,13 @@ public class LoginFrm extends JFrame implements ActionListener {
             public void mouseEntered(MouseEvent e) { btnLogin.setBackground(COLOR_BTN_HOV); }
             public void mouseExited(MouseEvent e)  { btnLogin.setBackground(COLOR_BTN); }
         });
-
-        // Allow pressing ENTER to login
         getRootPane().setDefaultButton(btnLogin);
 
         // ── Assemble ──
-        card.add(lblBigLogo);
-        card.add(Box.createVerticalStrut(4));
+        card.add(logoCenter);
+        card.add(Box.createVerticalStrut(2));
         card.add(lblTitle);
-        card.add(Box.createVerticalStrut(16));
+        card.add(Box.createVerticalStrut(14));
         card.add(lblU);
         card.add(Box.createVerticalStrut(4));
         card.add(txtUsername);
@@ -156,7 +174,7 @@ public class LoginFrm extends JFrame implements ActionListener {
         card.add(lblP);
         card.add(Box.createVerticalStrut(4));
         card.add(txtPassword);
-        card.add(Box.createVerticalStrut(8));
+        card.add(Box.createVerticalStrut(6));
         card.add(lblError);
         card.add(Box.createVerticalStrut(8));
         card.add(btnLogin);
@@ -167,34 +185,28 @@ public class LoginFrm extends JFrame implements ActionListener {
     // ──────────────────────────────────────────────────────────────────────
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == btnLogin) {
-            String username = txtUsername.getText().trim();
-            String password = new String(txtPassword.getPassword()).trim();
+        String username = txtUsername.getText().trim();
+        String password = new String(txtPassword.getPassword()).trim();
 
-            if (username.isEmpty() || password.isEmpty()) {
-                lblError.setText("Vui lòng nhập đầy đủ thông tin!");
-                return;
-            }
+        if (username.isEmpty() || username.equals("Enter account name") || password.isEmpty()) {
+            lblError.setText("Vui lòng nhập đầy đủ thông tin!");
+            return;
+        }
 
-            // Bước 3-5: tạo User object
-            User user = new User(username, password);
+        User user = new User(username, password);
+        UserDAO userDAO = new UserDAO();
+        User loggedIn = userDAO.checkLogin(user);
 
-            // Bước 6-11: gọi UserDAO.checkLogin()
-            UserDAO userDAO = new UserDAO();
-            User loggedIn = userDAO.checkLogin(user);
-
-            if (loggedIn == null) {
-                lblError.setText("Sai tên đăng nhập hoặc mật khẩu!");
-            } else {
-                lblError.setText(" ");
-                dispose();
-                // Bước 12-14: mở StatisticMenuFrm
-                new StatisticMenuFrm(loggedIn);
-            }
+        if (loggedIn == null) {
+            lblError.setText("Sai tên đăng nhập hoặc mật khẩu!");
+        } else {
+            lblError.setText(" ");
+            dispose();
+            new StatisticMenuFrm(loggedIn);
         }
     }
 
-    // ── Placeholder helper ─────────────────────────────────────────────────
+    // ── Placeholder helper ────────────────────────────────────────────────
     private void setPlaceholder(JTextField field, String placeholder) {
         field.setForeground(Color.GRAY);
         field.setText(placeholder);
@@ -214,19 +226,32 @@ public class LoginFrm extends JFrame implements ActionListener {
         });
     }
 
-    // ── Inner: gradient background panel ──────────────────────────────────
+    // ── Helper: load ảnh từ đường dẫn tương đối ─────────────────────────
+    static Image loadImage(String relativePath) {
+        try {
+            File f = new File(relativePath);
+            if (f.exists()) return new ImageIcon(f.getAbsolutePath()).getImage();
+        } catch (Exception ignored) {}
+        return null;
+    }
+
+    // ── Inner: Panel vẽ ảnh nền ──────────────────────────────────────────
     static class BackgroundPanel extends JPanel {
+        private final Image bg;
+        BackgroundPanel(Image bg) { this.bg = bg; }
+
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
-            Graphics2D g2 = (Graphics2D) g;
-            // Gradient xanh nhạt giống ảnh UI
-            GradientPaint gp = new GradientPaint(
-                0, 0, new Color(200, 220, 235),
-                getWidth(), getHeight(), new Color(170, 200, 220)
-            );
-            g2.setPaint(gp);
-            g2.fillRect(0, 0, getWidth(), getHeight());
+            if (bg != null) {
+                g.drawImage(bg, 0, 0, getWidth(), getHeight(), this);
+            } else {
+                // Fallback gradient
+                Graphics2D g2 = (Graphics2D) g;
+                g2.setPaint(new GradientPaint(0, 0, new Color(200, 220, 235),
+                    getWidth(), getHeight(), new Color(170, 200, 220)));
+                g2.fillRect(0, 0, getWidth(), getHeight());
+            }
         }
     }
 
