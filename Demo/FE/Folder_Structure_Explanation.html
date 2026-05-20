@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giải thích Cấu trúc Thư mục Dự án</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #2980b9;
+            margin-top: 30px;
+            border-bottom: 1px solid #bdc3c7;
+            padding-bottom: 5px;
+        }
+        .folder-card {
+            background: #fff;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-left: 5px solid #3498db;
+        }
+        .folder-card h3 {
+            margin-top: 0;
+            color: #e67e22;
+        }
+        .highlight {
+            font-weight: bold;
+            color: #e74c3c;
+        }
+        .flow-diagram {
+            background: #ecf0f1;
+            padding: 15px;
+            text-align: center;
+            border-radius: 5px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.1em;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Mục Đích Các Thư Mục Trong <code>Demo/FE/</code></h1>
+    
+    <p>Dự án này đang được xây dựng theo kiến trúc 3 lớp (3-tier) rút gọn, còn được biết đến phổ biến dưới dạng mô hình MVC (Model - View - Controller/DAO). Dưới đây là giải thích chi tiết cho từng thư mục:</p>
+
+    <div class="folder-card">
+        <h3>📁 <code>model/</code> (Tầng Dữ Liệu - "Bản thiết kế của đối tượng")</h3>
+        <p>Chứa các lớp đại diện cho <span class="highlight">thực thể trong hệ thống</span> (tương ứng với các bảng trong cơ sở dữ liệu).</p>
+        <p>Nhiệm vụ duy nhất của nó là <strong>đóng gói dữ liệu</strong> — có bao nhiêu cột trong bảng CSDL thì sẽ có bấy nhiêu thuộc tính trong lớp Model.</p>
+        <p><em>Ví dụ:</em> <code>User.java</code> định nghĩa rằng một người dùng sẽ có các thuộc tính: username, password, role.</p>
+    </div>
+
+    <div class="folder-card">
+        <h3>📁 <code>dao/</code> (Tầng Truy Cập Dữ Liệu - "Người giao tiếp với CSDL")</h3>
+        <p>DAO viết tắt của <em>Data Access Object</em>. Đây là nơi <span class="highlight">duy nhất</span> trong dự án được phép đọc/ghi dữ liệu.</p>
+        <p>Dù dữ liệu là giả (stub hardcode) như hiện tại hay là kết nối MySQL thật, các lớp View không bao giờ được tự ý lấy dữ liệu mà phải thông qua DAO.</p>
+        <p><em>Ví dụ:</em> <code>UserDAO.java</code> chứa hàm kiểm tra xem username/password người dùng nhập vào có khớp với dữ liệu hệ thống không.</p>
+    </div>
+
+    <div class="folder-card">
+        <h3>📁 <code>view/</code> (Tầng Giao Diện - "Cái người dùng nhìn thấy")</h3>
+        <p>Chứa tất cả các <span class="highlight">Form Java Swing</span> (Giao diện người dùng).</p>
+        <p>Tầng này nhận dữ liệu từ người dùng nhập vào, gọi các hàm từ DAO để xử lý, sau đó lấy kết quả trả về từ DAO (thường là các đối tượng Model) để hiển thị lên màn hình. Tầng này cũng lo việc điều hướng giữa các Form.</p>
+        <p><em>Ví dụ:</em> <code>LoginFrm.java</code> hiển thị ô nhập liệu tài khoản, bắt sự kiện click nút Login, rồi chuyển thông tin sang <code>UserDAO</code> xử lý.</p>
+    </div>
+
+    <div class="folder-card">
+        <h3>📁 <code>out/</code> (Thư Mục Biên Dịch)</h3>
+        <p>Đây là thư mục chứa <span class="highlight">kết quả sau khi biên dịch</span>.</p>
+        <p>Thư mục này không phải do lập trình viên viết ra mà được tự động tạo ra bởi trình biên dịch (lệnh <code>javac</code>). Nó chứa các file <code>.class</code> (bytecode) để máy ảo Java (JVM) có thể đọc và chạy ứng dụng. Bạn có thể xóa thư mục này đi và build lại bất kỳ lúc nào.</p>
+    </div>
+
+    <h2>🔄 Tổng Quan Mối Quan Hệ (Luồng Dữ Liệu)</h2>
+    <div class="flow-diagram">
+        <strong>view</strong> ──(gọi)──&gt; <strong>dao</strong> ──(trả về)──&gt; <strong>model</strong> ──(hiển thị)──&gt; <strong>view</strong>
+    </div>
+
+</body>
+</html>
