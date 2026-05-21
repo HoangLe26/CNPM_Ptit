@@ -10,11 +10,7 @@ import java.sql.SQLException;
 /**
  * UserDAO – Truy vấn bảng người dùng (tài khoản đăng nhập).
  *
- * Thứ tự kiểm tra:
- *   1. Kết nối CSDL → tìm trong bảng "account"
- *   2. Nếu CSDL lỗi hoặc không có bảng → fallback tài khoản demo cứng
- *
- * !! Sau khi demo, hãy xóa phần fallback và sửa đúng tên bảng thật !!
+ * Bảng dùng: account – cần có các cột: id, username, password, role
  */
 public class UserDAO {
 
@@ -54,24 +50,12 @@ public class UserDAO {
             }
 
         } catch (SQLException e) {
-            // Bảng chưa tồn tại hoặc lỗi DB → ghi log và fallback xuống dưới
-            System.err.println("[UserDAO] DB lỗi, dùng fallback demo: " + e.getMessage());
+            System.err.println("[UserDAO] Lỗi truy vấn checkLogin: " + e.getMessage());
+            e.printStackTrace();
         } finally {
             DBConnection.close(conn, stmt, rs);
         }
 
-        // ── Bước 2: Fallback – tài khoản demo cứng (dùng khi chưa có DB) ─
-        if ("admin".equals(user.getUsername()) && "123".equals(user.getPassword())) {
-            user.setId(1);
-            user.setRole("ADMIN");
-            return user;
-        }
-        if ("staff".equals(user.getUsername()) && "123".equals(user.getPassword())) {
-            user.setId(2);
-            user.setRole("STAFF");
-            return user;
-        }
-
-        return null; // Sai tài khoản/mật khẩu
+        return null; // Sai tài khoản/mật khẩu hoặc lỗi kết nối
     }
 }
